@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ck.creative.sys.dao.ImgDao">	
+	
+    <sql id="ImgColumns">
+    	a.id,
+		a.type,
+		a.name, 
+		a.picture,
+		a.url,
+		a.uid
+    </sql>    
+	
+	<!-- 查询 -->
+	<select id="findList" resultType="Img">
+		SELECT
+			<include refid="ImgColumns"/>	
+		FROM img a
+		<where>
+			<if test="name !=null and name !=''">
+				 a.name like '%${name}%' 
+			</if>
+			<if test="uid !=0">
+				and a.uid = #{uid} 
+			</if>
+			<if test="type !=null and type !=''">
+				and  a.type  = #{type} 
+			</if>
+		</where>
+	</select>		
+	
+	<!-- 用户查询 -->
+	<select id="findUserList" resultType="Img">
+		SELECT			
+			a.id,
+			a.type,
+			a.name, 
+			a.picture,
+			a.url,
+			g.id as gid,
+			f.id as fid
+		FROM img a
+		left join (select * from goodlike where uid = #{uid}) g on g.imid = a.id
+		left join (select * from favorite where uid = #{uid}) f on f.imid = a.id
+		<where>		
+			<if test="id !=0">
+				 a.id = #{id} 
+			</if>
+			<if test="name !=null and name !=''">
+				and  a.name like '%${name}%' 
+			</if>
+			<if test="type !=null and type !=''">
+				and  a.type  = #{type} 
+			</if>
+		</where>
+	</select>	
+	
+	<select id="findById" resultType="Img">
+		SELECT
+			<include refid="ImgColumns"/>	
+		FROM img a
+		<where>
+			<if test="id !=0">
+				 a.id = #{id}
+			</if>
+		</where>
+	</select>	
+	<insert id="insert">
+		INSERT INTO img(
+			name, 
+			picture,
+			type,
+			url,
+			uid
+		) VALUES (
+			#{name},
+			#{picture},
+			#{type},
+			#{url},			
+			#{uid}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE img  
+		<trim prefix="set" suffixOverrides=",">
+		    <if test="name != null and name != ''">
+				name = #{name},
+			</if>
+			<if test="picture != null and picture != ''">	
+				picture = #{picture},
+			</if>
+			<if test="type != null and type != ''">
+				type = #{type},
+			</if>
+			<if test="url != null and url != ''">
+				url = #{url} 
+			</if>
+		</trim>
+		WHERE id = #{id}
+	</update>
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM img
+		WHERE id in
+		<foreach collection="ids" separator="," open="(" close=")" item="id">
+			#{id}
+		</foreach>
+	</update>
+</mapper>

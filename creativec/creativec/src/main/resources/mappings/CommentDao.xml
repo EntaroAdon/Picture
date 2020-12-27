@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ck.creative.sys.dao.CommentDao">	
+	
+    <sql id="GoodLikeColumns">
+    	a.id,
+		a.uid,
+		u.name as name ,
+		a.imid,
+		date_format(a.createTime, '%Y-%m-%d %H:%i:%s')  as createTime,
+		a.context,
+		i.name as imName
+    </sql>    
+	
+	<!-- 查询 -->
+	<select id="findList" resultType="GoodLike">
+		SELECT
+			<include refid="GoodLikeColumns"/>	
+		FROM comment a
+		left join sys_user u on u.id = a.uid
+		left join img i on i.id =a.imid
+		<where>
+			<if test="uid !=null and uid !=''">
+				a.uid = #{uid}
+			</if>
+			<if test="imid !=null and imid !=''">
+				and a.imid = #{imid}
+			</if>
+			<if test="name !=null and name !=''">
+				and u.name = #{name}
+			</if>
+			<if test="keywords !=null and keywords !=''">
+				and a.context like '%${keywords}%'
+			</if>
+		</where>
+	</select>	
+	
+	<insert id="insert">
+		INSERT INTO comment(
+			uid,
+			imid,
+			createTime,
+			context
+		) VALUES (
+			#{uid},
+			#{imid},
+			str_to_date(#{createTime}, '%Y-%m-%d %H:%i:%s'),
+			#{context}
+		)
+	</insert>
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM comment
+		WHERE id in
+		<foreach collection="ids" separator="," open="(" close=")" item="id">
+			#{id}
+		</foreach>
+	</update>
+</mapper>

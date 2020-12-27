@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ck.creative.sys.dao.UserDao">	
+	
+    <sql id="UserColumns">
+    	a.id,
+		a.name,
+		a.loginName,
+		a.passWord,
+		a.sex,
+		a.phone,
+		a.pid,
+		(select picture from sys_user_photo where id = a.pid) as picture,
+		date_format(a.createTime, '%Y-%m-%d %H:%i:%s')  as createTime,
+		date_format(a.updateTime, '%Y-%m-%d %H:%i:%s')  as updateTime,
+		a.keepAlive,
+		date_format(a.memberTime, '%Y-%m-%d %H:%i:%s')  as memberTime,
+		DATE_ADD(memberTime, INTERVAL 1 YEAR) as endTime,
+		a.roleType
+		
+    </sql>    
+	
+	<!-- 查询人员照片 -->
+	<select id="findList" resultType="User">
+		SELECT
+			<include refid="UserColumns"/>
+		<!-- FROM sys_user_photo a	 -->		
+		FROM sys_user a
+		<where>
+			<if test="loginName !=null and loginName !=''">
+				a.loginName = #{loginName}
+			</if>
+		</where>
+	</select>
+	
+	<!-- 根据id查询人员 -->
+	<select id="findById1" resultType="User" parameterType="User">
+		SELECT
+			<include refid="UserColumns"/>
+		FROM sys_user a
+		WHERE a.loginName = #{loginName}	
+	</select>
+	
+	<select id="findById" resultType="User">
+		SELECT
+			<include refid="UserColumns"/>	
+		FROM sys_user a
+		<where>
+			<if test="id !=null">
+				 a.id = #{id}
+			</if>
+		</where>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO sys_user(
+			name,
+			loginName,
+			passWord,
+			pid,
+			sex,
+			phone,
+			createTime,
+			keepAlive,
+			roleType
+		) VALUES (
+			#{name},
+			#{loginName},
+			#{passWord},
+			#{pid},
+			#{sex},
+			#{phone},
+			str_to_date(#{createTime}, '%Y-%m-%d %H:%i:%s'), 
+			#{keepAlive},
+			#{roleType}			
+		)
+	</insert>
+	
+	<!-- 批量导入用户 -->
+	<insert id="insertUsers" useGeneratedKeys="false" parameterType="java.util.List">
+		INSERT INTO sys_user(
+			name,
+			loginName,
+			passWord,
+			sex,
+			phone,
+			createTime,
+			updateTime,
+			keepAlive,
+			roleType
+		) VALUES
+		<foreach collection="users" item="user" index="index" open="" close="" separator=",">		
+		(	
+			#{user.name, jdbcType=VARCHAR},		
+		 	#{user.loginName, jdbcType=VARCHAR},
+			#{user.passWord, jdbcType=VARCHAR},			
+			#{user.sex, jdbcType=VARCHAR},
+			#{user.phone, jdbcType=VARCHAR},
+			str_to_date(#{user.createTime, jdbcType=VARCHAR}, '%Y-%m-%d %H:%i:%s'),
+			str_to_date(#{user.updateTime, jdbcType=VARCHAR}, '%Y-%m-%d %H:%i:%s'),
+			#{user.keepAlive, jdbcType=VARCHAR},			
+			#{user.roleType}		
+		)
+		</foreach>
+	</insert>
+	
+	<update id="update">
+		UPDATE sys_user
+		<trim prefix="set" suffixOverrides=",">
+		    <if test="name != null and name != ''">
+				name = #{name},
+			</if>
+			<if test="loginName != null and loginName != ''">	
+				loginName = #{loginName},
+			</if>
+			<if test="pid != null and pid != ''">
+				pid = #{pid},
+			</if>
+			<if test="sex != null and sex != ''">
+				sex = #{sex},
+			</if>
+			<if test="phone != null and phone != ''">
+				phone = #{phone},
+			</if>
+			<if test="updateTime != null and updateTime != ''">
+				updateTime = str_to_date(#{updateTime}, '%Y-%m-%d %H:%i:%s'),
+			</if>
+			<if test="keepAlive != null and keepAlive != ''">
+				keepAlive = #{keepAlive},
+			</if>
+			<if test="roleType != null and roleType != ''">
+				roleType = #{roleType}
+			</if>
+		</trim>
+		WHERE id = #{id}
+	</update>
+	
+	<!-- 加入会员  -->
+	<update id="ismember">
+		UPDATE sys_user set
+			roleType = '会员',
+			memberTime = str_to_date(#{memberTime}, '%Y-%m-%d %H:%i:%s')		
+		WHERE id = #{id}
+	</update>
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM sys_user
+		WHERE id in
+		<foreach collection="ids" separator="," open="(" close=")" item="id">
+			#{id}
+		</foreach>
+	</update>
+	
+	<insert id="insertPhoto">
+		INSERT INTO sys_user_photo(
+			id,
+			uid,
+			picture
+		) VALUES (
+			#{id},
+			#{uid},
+			#{picture}
+		)
+	</insert>
+	
+	
+	<update id="deletePhoto">
+		DELETE FROM sys_user_photo
+		WHERE id = #{pid}
+	</update>
+</mapper>

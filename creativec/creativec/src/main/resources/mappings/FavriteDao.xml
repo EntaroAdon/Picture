@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ck.creative.sys.dao.FavoriteDao">	
+	
+    <sql id="GoodLikeColumns">
+    	a.id,
+		a.uid,
+		a.imid,
+		date_format(a.createTime, '%Y-%m-%d %H:%i:%s')  as createTime
+    </sql>    
+	
+	<!-- 查询 -->
+	<select id="findList" resultType="GoodLike">
+		SELECT
+			<include refid="GoodLikeColumns"/>	
+		FROM favorite a
+		<where>
+			a.uid = #{uid}
+			<if test="imid !=null and imid !=''">
+				and a.imid = #{imid}
+			</if>
+		</where>
+	</select>	
+	
+	<insert id="insert">
+		INSERT INTO favorite(
+			uid,
+			imid,
+			createTime
+		) VALUES (
+			#{uid},
+			#{imid},
+			str_to_date(#{createTime}, '%Y-%m-%d %H:%i:%s')
+		)
+	</insert>
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM favorite
+		WHERE uid = #{uid} and imid = #{imid}
+	</update>
+</mapper>
